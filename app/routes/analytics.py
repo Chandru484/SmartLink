@@ -1,5 +1,5 @@
 import io
-import pandas as pd
+import csv
 from flask import Blueprint, jsonify, Response, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.link import Link, AccessLog
@@ -50,22 +50,23 @@ def export_stats(link_id):
     if not logs:
         return jsonify({"msg": "No data to export"}), 404
         
-    data = [{
-        "Timestamp": log.timestamp,
-        "IP Address": log.ip_address,
-        "Browser": log.browser,
-        "OS": log.os,
-        "Device": log.device,
-        "User Agent": log.user_agent
-    } for log in logs]
+    # Use built-in CSV module instead of pandas for lighter builds
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["Timestamp", "IP Address", "Browser", "OS", "Device", "User Agent"])
+    writer.writeheader()
     
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    df.to_csv(output, index=False)
-    output.seek(0)
+    for log in logs:
+        writer.writerow({
+            "Timestamp": log.timestamp,
+            "IP Address": log.ip_address,
+            "Browser": log.browser,
+            "OS": log.os,
+            "Device": log.device,
+            "User Agent": log.user_agent
+        })
     
     return Response(
-        output,
+        output.getvalue(),
         mimetype="text/csv",
         headers={"Content-disposition": f"attachment; filename=stats_{link.short_code}.csv"}
     )
