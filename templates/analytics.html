@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Analytics - SmartLink Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #7c3aed;
+            --bg: #0b0f1a;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #2dd4bf;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            height: 100vh;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 32px 24px;
+            position: fixed;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+            padding: 48px;
+        }
+
+        .nav-link-pro {
+            color: var(--text-dim);
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .nav-link-pro:hover,
+        .nav-link-pro.active {
+            color: white;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .nav-link-pro.active {
+            color: var(--primary);
+        }
+
+        .stat-badge {
+            background: var(--surface);
+            padding: 32px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .stat-badge:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 32px;
+            height: 100%;
+        }
+
+        .text-muted {
+            color: var(--text-dim) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <a class="d-block fw-bold text-white fs-4 mb-5 text-decoration-none" href="/">
+            <i class="fas fa-bolt text-primary me-2"></i>SmartLink
+        </a>
+        <nav>
+            <a href="/dashboard" class="nav-link-pro"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="/dashboard" class="nav-link-pro"><i class="fas fa-link"></i> My Links</a>
+            <a href="/analytics" class="nav-link-pro active"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="javascript:logout()" class="nav-link-pro text-danger mt-auto"><i class="fas fa-sign-out-alt"></i>
+                Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <header class="mb-5">
+            <h1 class="fw-bold mb-1">Overall Performance</h1>
+            <p class="text-dim">Insights across all your shortened links</p>
+        </header>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-badge">
+                    <p class="text-dim small text-uppercase fw-bold mb-1">Total Clicks</p>
+                    <h2 class="fw-bold mb-0 text-primary" id="totalClicks">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-badge">
+                    <p class="text-dim small text-uppercase fw-bold mb-1">Total Links</p>
+                    <h2 class="fw-bold mb-0 text-accent" id="totalLinks">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-badge">
+                    <p class="text-dim small text-uppercase fw-bold mb-1">Avg. Clicks/Link</p>
+                    <h2 class="fw-bold mb-0 text-info" id="avgClicks">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-12">
+                <div class="chart-card">
+                    <h5 class="fw-bold mb-4">Click Growth</h5>
+                    <div style="height: 300px;"><canvas id="growthChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = '/login';
+
+        async function loadData() {
+            const res = await fetch('/api/analytics/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            document.getElementById('totalClicks').innerText = data.total_clicks;
+            document.getElementById('totalLinks').innerText = data.total_links;
+            document.getElementById('avgClicks').innerText = data.total_links ? (data.total_clicks / data.total_links).toFixed(1) : 0;
+
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Monthly Clicks',
+                        data: [65, 59, 80, 81, 56, 55, data.total_clicks],
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>

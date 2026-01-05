@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLink - Pro URL Shortener</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #7c3aed;
+            --primary-glow: rgba(124, 58, 237, 0.4);
+            --secondary: #2dd4bf;
+            --bg: #0b0f1a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 0;
+        }
+
+        .hero-section {
+            padding: 120px 0 80px;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .btn-primary-pro {
+            background: var(--primary);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-weight: 600;
+            border: none;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px var(--primary-glow);
+        }
+
+        .btn-primary-pro:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px var(--primary-glow);
+            color: white;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px;
+            transition: 0.3s;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .text-dim {
+            color: var(--text-dim) !important;
+        }
+
+        .text-muted {
+            color: var(--text-dim) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white fs-3" href="/">
+                <i class="fas fa-bolt text-primary me-2"></i>SmartLink<span class="text-primary">.</span>
+            </a>
+            <div class="ms-auto">
+                <a href="/login" class="btn btn-link text-white text-decoration-none me-3">Login</a>
+                <a href="/register" class="btn btn-primary-pro">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Shorten. Track.<br>Optimize.</h1>
+            <p class="hero-subtitle">Powerful analytics, custom aliases, and enterprise-grade security for your links.
+                All in one place.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/register" class="btn btn-primary-pro btn-lg">Start for Free</a>
+                <button class="btn btn-outline-light btn-lg rounded-4 px-4">See Features</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-chart-line"></i></div>
+                        <h4>Deep Analytics</h4>
+                        <p class="text-muted">Track clicks, devices, browsers, and geographic data for every link you
+                            create.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-tags"></i></div>
+                        <h4>Custom Aliases</h4>
+                        <p class="text-muted">Personalize your links with your own brand names to increase click-through
+                            rates.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-lock"></i></div>
+                        <h4>Secure & Fast</h4>
+                        <p class="text-muted">Redirection happens in milliseconds with built-in protection against
+                            malicious links.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5 text-center text-dim border-top border-white border-opacity-10 mt-5">
+        <p>© 2026 SmartLink Pro. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

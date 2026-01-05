@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Analytics - SmartLink Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #7c3aed;
+            --bg: #0b0f1a;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #2dd4bf;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            height: 100vh;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 32px 24px;
+            position: fixed;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+            padding: 48px;
+        }
+
+        .nav-link-pro {
+            color: var(--text-dim);
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .nav-link-pro:hover {
+            color: white;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .analytics-card {
+            background: var(--surface);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px 24px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .btn-primary-pro {
+            background: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .text-muted {
+            color: var(--text-dim) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <a class="d-block fw-bold text-white fs-4 mb-5 text-decoration-none" href="/">
+            <i class="fas fa-bolt text-primary me-2"></i>SmartLink
+        </a>
+        <nav>
+            <a href="/dashboard" class="nav-link-pro"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="/dashboard" class="nav-link-pro"><i class="fas fa-link"></i> My Links</a>
+            <a href="/analytics" class="nav-link-pro"><i class="fas fa-chart-pie"></i> Analytics</a>
+            <a href="javascript:logout()" class="nav-link-pro text-danger mt-auto"><i class="fas fa-sign-out-alt"></i>
+                Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="fw-bold mb-1" id="linkTitle">Loading...</h1>
+                <p class="text-dim" id="linkUrl"></p>
+            </div>
+            <a id="exportBtn" class="btn btn-primary-pro">
+                <i class="fas fa-download me-2"></i> Export Data
+            </a>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-badge">
+                    <p class="text-dim small text-uppercase fw-bold mb-1">Total Clicks</p>
+                    <h2 class="fw-bold mb-0 text-primary" id="totalClicks">0</h2>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="analytics-card h-100 mb-0">
+                    <canvas id="clicksChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="analytics-card">
+                    <h5 class="fw-bold mb-4">Device Distribution</h5>
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="analytics-card">
+                    <h5 class="fw-bold mb-4">Top Browsers</h5>
+                    <canvas id="browserChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('access_token');
+        const linkId = "{{ link_id }}";
+
+        async function loadStats() {
+            const res = await fetch(`/api/analytics/${linkId}/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            document.getElementById('linkTitle').innerText = data.link.title || `/${data.link.short_code}`;
+            document.getElementById('linkUrl').innerText = data.link.original_url;
+            document.getElementById('totalClicks').innerText = data.total_clicks;
+            document.getElementById('exportBtn').href = `/api/analytics/${linkId}/export?token=${token}`;
+
+            // Initialize Charts with dummy/simulated data for now
+            initCharts(data.total_clicks);
+        }
+
+        function initCharts(total) {
+            const ctx = document.getElementById('clicksChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Clicks',
+                        data: [12, 19, 3, 5, 2, 3, total],
+                        borderColor: '#7c3aed',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // Device Chart
+            new Chart(document.getElementById('deviceChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Desktop', 'Mobile', 'Tablet'],
+                    datasets: [{
+                        data: [65, 30, 5],
+                        backgroundColor: ['#7c3aed', '#2dd4bf', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+            });
+
+            // Browser Chart
+            new Chart(document.getElementById('browserChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Chrome', 'Safari', 'Firefox', 'Edge'],
+                    datasets: [{
+                        data: [45, 25, 15, 10],
+                        backgroundColor: '#2dd4bf',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // Fix export with token (alternative to query param if backend doesn't support it)
+        document.getElementById('exportBtn').onclick = async (e) => {
+            const res = await fetch(`/api/analytics/${linkId}/export`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `stats_${linkId}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        };
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+        }
+
+        loadStats();
+    </script>
+</body>
+
+</html>
