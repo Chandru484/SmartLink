@@ -19,7 +19,11 @@ def create_app():
     app = Flask(__name__, template_folder='../templates')
     
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///instance/smartlink.db')
+    db_url = os.getenv('DATABASE_URL', 'sqlite:///instance/smartlink.db')
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
@@ -31,16 +35,23 @@ def create_app():
     CORS(app)
 
     # Setup Logging
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/smartlink.log', maxBytes=10240, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    ))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
-    app.logger.info('SmartLink startup')
+    if not app.debug:
+        if not os.path.exists('logs'):
+            try:
+                os.mkdir('logs')
+            except OSError:
+                pass
+        
+        if os.path.exists('logs'):
+            file_handler = RotatingFileHandler('logs/smartlink.log', maxBytes=10240, backupCount=10)
+            file_handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+            ))
+            file_handler.setLevel(logging.INFO)
+            app.logger.addHandler(file_handler)
+            
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('SmartLink startup')
 
     # Register Blueprints
     from app.routes.auth import auth_bp

@@ -11,5 +11,5 @@ flask-cors==4.0.0
 Flask-Limiter==3.5.0
 validators==0.22.0
 redis==5.0.1
-pytest==7.4.3
-Flask-Pytest==0.0.5
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
