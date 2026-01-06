@@ -185,6 +185,56 @@
         .text-muted {
             color: var(--text-dim) !important;
         }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                z-index: 1050;
+                width: 260px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 24px;
+            }
+
+            .mobile-toggle {
+                display: inline-block;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+
+        }
     </style>
 </head>
 
@@ -203,11 +253,18 @@
         </nav>
     </div>
 
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <main class="main-content">
-        <header class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h1 class="fw-bold mb-1">Link Overview</h1>
-                <p class="text-dim">Welcome back to your workspace</p>
+        <header class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-4">
+            <div class="d-flex align-items-center">
+                <button class="mobile-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <h1 class="fw-bold mb-1">Link Overview</h1>
+                    <p class="text-dim">Welcome back to your workspace</p>
+                </div>
             </div>
             <button class="btn btn-primary-pro" data-bs-toggle="modal" data-bs-target="#newLinkModal">
                 <i class="fas fa-plus me-2"></i> Create Link
@@ -295,6 +352,10 @@
                 const res = await fetch('/api/links', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
                 const data = await res.json();
 
                 const linksBody = document.getElementById('linksBody');
@@ -306,8 +367,10 @@
                         linksBody.innerHTML += `
                             <tr>
                                 <td>
-                                    <div class="fw-bold mb-1">${l.title || 'No Title'}</div>
-                                    <div class="text-dim small" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${l.original_url}</div>
+                                    <div>
+                                        <div class="fw-bold mb-1">${l.title || 'No Title'}</div>
+                                        <div class="text-dim small" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${l.original_url}</div>
+                                    </div>
                                 </td>
                                 <td>
                                     <a href="/${l.short_code}" target="_blank" class="text-primary fw-bold text-decoration-none">
@@ -317,7 +380,7 @@
                                 <td><span class="fw-bold">${l.click_count}</span></td>
                                 <td>${l.tag ? `<span class="badge-tag">${l.tag}</span>` : '<span class="text-muted small">None</span>'}</td>
                                 <td>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 justify-content-end w-100">
                                         <a href="/stats/${l.id}" class="action-btn"><i class="fas fa-chart-bar"></i></a>
                                         <button class="action-btn delete" onclick="deleteLink(${l.id})"><i class="fas fa-trash"></i></button>
                                     </div>
@@ -331,6 +394,10 @@
                 const statsRes = await fetch('/api/analytics/user', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (statsRes.status === 401) {
+                    logout();
+                    return;
+                }
                 const statsData = await statsRes.json();
                 if (statsData.total_clicks !== undefined) {
                     document.getElementById('totalClicks').innerText = statsData.total_clicks;
@@ -358,6 +425,11 @@
                 body: JSON.stringify(body)
             });
 
+            if (res.status === 401) {
+                logout();
+                return;
+            }
+
             if (res.ok) {
                 bootstrap.Modal.getInstance(document.getElementById('newLinkModal')).hide();
                 loadData();
@@ -366,7 +438,7 @@
                 let errorMsg = data.msg || "Error creating link";
                 if (data.errors) {
                     errorMsg += ": " + Object.entries(data.errors)
-                        .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+                        .map(([field, msgs]) => `${field}: ${msgs.join(', ')} `)
                         .join('; ');
                 }
                 alert(errorMsg);
@@ -381,6 +453,11 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
+            if (res.status === 401) {
+                logout();
+                return;
+            }
+
             if (res.ok) loadData();
             else alert("Error deleting link");
         }
@@ -391,6 +468,11 @@
         }
 
         loadData();
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
     </script>
 </body>
 
